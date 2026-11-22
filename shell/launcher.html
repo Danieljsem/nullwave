@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Nullwave launcher</title>
+<style>
+@font-face{font-family:"Figtree";src:url(../wallpaper/fonts/figtree-latin.woff2) format("woff2");font-weight:300 900}
+@font-face{font-family:"Figtree";src:url(../wallpaper/fonts/figtree-latin-ext.woff2) format("woff2");font-weight:300 900;unicode-range:U+0100-02AF}
+:root{--ink:#0f0a1e;--ink2:#181129;--paper:#f3eefa;--paper2:#a9a8c2;--paper3:#66658a;--teal:#22e6d4;--pink:#ff3ea5;--purple:#9b4dff;--hair:rgba(243,238,250,.14)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:transparent;font-family:"Figtree","Segoe UI",sans-serif;color:var(--paper);user-select:none}
+.veil{position:fixed;inset:0;background:radial-gradient(circle at 50% 50%,rgba(24,17,41,.82),rgba(10,7,20,.9));animation:in .18s ease-out}
+@keyframes in{from{opacity:0}to{opacity:1}}
+.wheel{position:fixed;left:50%;top:50%;width:640px;height:640px;transform:translate(-50%,-50%);animation:pop .22s cubic-bezier(.2,.9,.3,1.2)}
+@keyframes pop{from{transform:translate(-50%,-50%) scale(.9);opacity:0}}
+.ring{position:absolute;inset:0;border-radius:50%;border:1px solid var(--hair)}
+.ring2{inset:110px;border-color:rgba(243,238,250,.07)}
+.arc{position:absolute;inset:-12px;border-radius:50%;background:conic-gradient(from -20deg,#22e6d4,#9b4dff 18%,#ff3ea5 34%,transparent 34%);
+  -webkit-mask:radial-gradient(circle closest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));animation:spin 14s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.core{position:absolute;left:50%;top:50%;width:260px;height:260px;transform:translate(-50%,-50%);border-radius:50%;background:var(--paper);color:var(--ink);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-shadow:0 30px 80px rgba(0,0,0,.5)}
+.core input{width:200px;border:none;background:transparent;font:inherit;font-size:30px;font-weight:800;text-align:center;color:var(--ink);outline:none}
+.core input::placeholder{color:#b9b4cc}
+.core small{font-family:Consolas,monospace;font-size:9.5px;letter-spacing:.18em;color:#6e6c8c;margin-top:8px}
+.core .hint{margin-top:14px;font-family:Consolas,monospace;font-size:10px;display:flex;gap:6px}
+.core .hint span{border:1.2px solid var(--ink);border-radius:4px;padding:1px 6px}
+.node{position:absolute;width:98px;height:98px;margin:-49px 0 0 -49px;border-radius:50%;background:var(--ink2);border:1px solid var(--hair);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font-size:10.5px;font-weight:600;color:var(--paper2);cursor:pointer;transition:transform .15s,background .15s}
+.node img{width:34px;height:34px;object-fit:contain}
+.node span{max-width:84px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.node:hover,.node.sel{background:linear-gradient(135deg,#22e6d4,#9b4dff 55%,#ff3ea5);color:#0f0a1e;transform:scale(1.08);border-color:transparent}
+.node .key{position:absolute;top:-4px;right:0;font-family:Consolas,monospace;font-size:9px;background:var(--ink);border:1px solid var(--hair);border-radius:4px;padding:1px 5px;color:var(--paper3)}
+.res{position:fixed;left:50%;top:calc(50% + 350px);transform:translateX(-50%);width:520px;display:flex;flex-direction:column;gap:4px}
+.res div{display:flex;align-items:center;gap:12px;padding:9px 14px;border-radius:12px;background:rgba(24,17,41,.9);border:1px solid var(--hair);font-size:14px;font-weight:600;cursor:pointer}
+.res div img{width:24px;height:24px}
+.res div.sel,.res div:hover{border-color:var(--teal);background:rgba(34,230,212,.12)}
+.side{position:fixed;left:calc(50% + 380px);top:50%;transform:translateY(-50%);width:250px}
+.side h5{font-family:Consolas,monospace;font-weight:400;font-size:10px;letter-spacing:.18em;color:var(--paper3);margin-bottom:10px}
+.side button{display:block;width:100%;text-align:left;font:inherit;font-size:13px;font-weight:600;color:var(--paper);background:transparent;border:none;border-bottom:1px solid var(--hair);padding:10px 0;cursor:pointer}
+.side button:hover{color:var(--teal)}
+</style>
+</head>
+<body>
+<div class="veil" id="veil"></div>
+<div class="wheel" id="wheel">
+  <div class="arc"></div><div class="ring"></div><div class="ring ring2"></div>
+  <div class="core"><input id="q" placeholder="hledej…" autocomplete="off" spellcheck="false"><small>APLIKACE · SOUBORY · NASTAVENÍ</small><div class="hint"><span>↵ spustit</span><span>1–0 rychle</span><span>esc</span></div></div>
+</div>
+<div class="res" id="res"></div>
+<div class="side">
+  <h5>NULLWAVE</h5>
+  <button id="bPanel">Ovládací panel</button>
+  <button data-p="ms-settings:">Nastavení Windows</button>
+  <button data-p="explorer.exe">Průzkumník</button>
+</div>
+<script>
+let ALL=[], PIN=[], sel=0, hits=[];
+const $=(i)=>document.getElementById(i);
+const byPath=(p)=>ALL.find(a=>a.path===p);
+function ring(){
+  const w=$('wheel'); w.querySelectorAll('.node').forEach(n=>n.remove());
+  const items=PIN.map(byPath).filter(Boolean), R=262;
+  items.forEach((a,i)=>{ const ang=i/items.length*Math.PI*2, n=document.createElement('div'); n.className='node';
+    n.style.left=(320+R*Math.sin(ang))+'px'; n.style.top=(320-R*Math.cos(ang))+'px';
+    n.innerHTML=`<span class="key">${(i+1)%10}</span>${a.icon?`<img src="${a.icon}">`:''}<span>${a.name}</span>`;
+    n.onclick=()=>nw.launch(a.path); w.appendChild(n); });
+}
+function search(){
+  const q=$('q').value.trim().toLowerCase();
+  if(!q){ hits=[]; $('res').innerHTML=''; return; }
+  hits=ALL.map(a=>{const n=a.name.toLowerCase();const s=n.startsWith(q)?0:n.split(/\s+/).some(w=>w.startsWith(q))?1:n.includes(q)?2:9;return [s,a]})
+    .filter(x=>x[0]<9).sort((a,b)=>a[0]-b[0]||a[1].name.length-b[1].name.length).slice(0,6).map(x=>x[1]);
+  sel=0; draw();
+}
+function draw(){ $('res').innerHTML=hits.map((a,i)=>`<div class="${i===sel?'sel':''}" data-i="${i}">${a.icon?`<img src="${a.icon}">`:''}${a.name}</div>`).join('');
+  $('res').querySelectorAll('div').forEach(d=>d.onclick=()=>nw.launch(hits[+d.dataset.i].path)); }
+$('q').addEventListener('input',search);
+document.addEventListener('keydown',(e)=>{
+  if(e.key==='Escape') return nw.hide();
+  if(e.key==='ArrowDown'&&hits.length){ sel=(sel+1)%hits.length; draw(); e.preventDefault(); }
+  if(e.key==='ArrowUp'&&hits.length){ sel=(sel-1+hits.length)%hits.length; draw(); e.preventDefault(); }
+  if(e.key==='Enter'&&hits[sel]) nw.launch(hits[sel].path);
+  if(!$('q').value&&/^[0-9]$/.test(e.key)){ const a=byPath(PIN[(+e.key+9)%10]); if(a){ e.preventDefault(); nw.launch(a.path); } }
+});
+$('veil').onclick=()=>nw.hide();
+$('bPanel').onclick=()=>nw.panel();
+document.querySelectorAll('[data-p]').forEach(b=>b.onclick=()=>nw.launch(b.dataset.p));
+let loading=null, pinKey='';
+function load(){   // one request at a time; the ring is redrawn only when the list really changed
+  return loading||(loading=nw.apps().then((r)=>{ ALL=r.all||[]; PIN=r.pinned||[]; const k=PIN.join('|')+'|'+ALL.length+'|'+ALL.filter(a=>a.icon).length; if(k!==pinKey){ pinKey=k; ring(); } if($('q').value) search(); })
+    .catch(()=>{}).finally(()=>{ loading=null; }));
+}
+nw.onOpen(()=>{ $('q').value=''; search(); $('q').focus(); load(); });
+load(); $('q').focus();
+</script>
+</body>
+</html>

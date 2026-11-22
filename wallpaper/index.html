@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nullwave</title>
+<link rel="icon" href="../brand/nullwave.svg">
+<script src="config.js"></script>
+<style>
+@font-face{font-family:"Figtree";src:url(fonts/figtree-latin.woff2) format("woff2");font-weight:300 900;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215}
+@font-face{font-family:"Figtree";src:url(fonts/figtree-latin-ext.woff2) format("woff2");font-weight:300 900;unicode-range:U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF}
+:root{
+  --ink:#0f0a1e; --ink2:#181129; --ink3:#241838;
+  --paper:#f3eefa; --paper2:#a9a8c2; --paper3:#66658a; --paper4:#33324d;
+  --teal:#22e6d4; --teal2:#12b8c9; --pink:#ff3ea5; --purple:#9b4dff;
+  --hair:rgba(243,238,250,.12); --hair2:rgba(243,238,250,.22);
+  --disp:"Bahnschrift","DIN Alternate","Arial Narrow",sans-serif;
+  --mono:"Consolas","Lucida Console",monospace;
+  --song:24,17,41;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--ink);color:var(--paper);font-family:var(--mono);user-select:none}
+#stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden}
+
+/* ---------- background ---------- */
+#topo{position:absolute;left:-96px;top:-54px;width:2112px;height:1188px;animation:drift 90s ease-in-out infinite alternate;will-change:transform}
+@keyframes drift{0%{transform:translate(0,0) scale(1)}50%{transform:translate(-60px,24px) scale(1.035)}100%{transform:translate(40px,-30px) scale(1.02)}}
+.glow{position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse 1100px 520px at 55% 112%,rgba(255,62,165,.22),transparent 70%),
+             radial-gradient(ellipse 900px 600px at 6% -10%,rgba(155,77,255,.24),transparent 70%),
+             radial-gradient(ellipse 700px 500px at 95% 40%,rgba(34,230,212,.07),transparent 70%);
+  animation:breathe 14s ease-in-out infinite alternate}
+@keyframes breathe{from{opacity:.75}to{opacity:1}}
+.grain{position:absolute;inset:0;pointer-events:none;opacity:.16;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* radar */
+.radar{position:absolute;left:900px;top:470px;width:0;height:0}
+.rr{position:absolute;border-radius:50%;border:1px dashed rgba(34,230,212,.22);transform:translate(-50%,-50%)}
+.spin{position:absolute;left:-560px;top:-560px;width:1120px;height:1120px;border-radius:50%;animation:spin 7s linear infinite;will-change:transform;
+  background:conic-gradient(from 0deg,transparent 0deg,transparent 300deg,rgba(34,230,212,.08) 345deg,rgba(34,230,212,.26) 359.5deg,transparent 360deg);
+  -webkit-mask:radial-gradient(circle closest-side,#000 0 82%,transparent 100%);mask:radial-gradient(circle closest-side,#000 0 82%,transparent 100%)}
+.spin::after{content:"";position:absolute;left:50%;top:50%;width:420px;height:1.5px;transform-origin:0 50%;transform:rotate(-90deg);background:linear-gradient(90deg,var(--teal),transparent)}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cross{position:absolute;left:-8px;top:-8px;width:16px;height:16px}
+.cross::before,.cross::after{content:"";position:absolute;background:var(--teal)}
+.cross::before{left:7px;top:0;width:2px;height:16px}.cross::after{top:7px;left:0;height:2px;width:16px}
+.blip{position:absolute;width:0;height:0}
+.blip i{position:absolute;left:-5px;top:-5px;width:10px;height:10px;border-radius:50%;background:var(--pink);box-shadow:0 0 16px var(--pink)}
+.blip i::after{content:"";position:absolute;inset:-1px;border-radius:50%;border:2px solid var(--pink);animation:ping 2.4s ease-out infinite}
+@keyframes ping{from{transform:scale(1);opacity:.9}to{transform:scale(4.5);opacity:0}}
+.blip span{position:absolute;left:14px;top:-8px;white-space:nowrap;font-size:11px;letter-spacing:.06em;color:var(--paper2)}
+.blip span b{color:var(--pink);font-weight:400;margin-right:6px}
+.blip.down i{background:var(--paper4);box-shadow:none}.blip.down i::after{display:none}.blip.down span b{color:var(--paper3)}
+.blip.self i{background:var(--teal);box-shadow:0 0 16px var(--teal)}.blip.self i::after{border-color:var(--teal)}.blip.self span b{color:var(--teal)}
+
+.giant{position:absolute;left:150px;bottom:-40px;font-family:var(--disp);font-weight:700;font-size:300px;line-height:.82;letter-spacing:-.03em;color:transparent;-webkit-text-stroke:1.5px rgba(243,238,250,.12);white-space:nowrap;pointer-events:none}
+.giant span{-webkit-text-stroke:2px rgba(255,62,165,.5)}
+.coord{position:absolute;font-size:10px;letter-spacing:.12em;color:var(--paper3)}
+.coord .tick{color:var(--teal)}
+
+/* ---------- widgets ---------- */
+.wd{position:absolute;left:1492px;width:400px;background:rgba(24,17,41,.80);border:1px solid var(--hair);border-radius:16px;backdrop-filter:blur(10px);overflow:hidden}
+.wd .h{display:flex;justify-content:space-between;align-items:center;padding:12px 16px 0;font-size:10px;letter-spacing:.16em;color:var(--paper3)}
+.wd .h b{color:var(--paper);font-weight:400}
+
+/* dial */
+.dial{top:22px;height:258px}
+.dial svg{position:absolute;left:12px;top:30px;width:224px;height:224px}
+.dial .big{position:absolute;left:12px;top:30px;width:224px;height:224px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.dial .big b{font-family:var(--disp);font-size:62px;font-weight:600;line-height:1;letter-spacing:-.02em}
+.dial .big small{font-size:10px;letter-spacing:.2em;color:var(--paper3);margin-top:6px}
+.dial .side{position:absolute;right:18px;top:48px;width:120px;display:flex;flex-direction:column;gap:13px}
+.dial .side div{border-left:2px solid var(--hair2);padding-left:10px}
+.dial .side label{display:block;font-size:9px;letter-spacing:.14em;color:var(--paper3)}
+.dial .side span{font-family:var(--disp);font-size:18px}
+.dial .side .t{border-color:var(--teal)}.dial .side .p{border-color:var(--pink)}.dial .side .v{border-color:var(--purple)}
+
+/* screens carousel */
+.screens{top:296px;height:332px;transition:transform .45s cubic-bezier(.2,.8,.2,1),box-shadow .45s;transform-origin:100% 0}
+.screens.big{transform:translate(-560px,30px) scale(2.25);box-shadow:0 40px 120px rgba(0,0,0,.7);z-index:20;background:rgba(24,17,41,.97)}
+.screens .nav{display:flex;align-items:center;gap:6px}
+.screens .nav button{width:26px;height:22px;border-radius:11px;border:1px solid var(--hair2);background:transparent;color:var(--paper);font:inherit;font-size:12px;cursor:pointer;line-height:1}
+.screens .nav button:hover{background:var(--teal);color:var(--ink);border-color:var(--teal)}
+.tabs{display:flex;gap:6px;padding:10px 16px 0}
+.tabs span{font-size:10px;letter-spacing:.12em;padding:4px 10px;border-radius:10px;border:1px solid var(--hair);color:var(--paper3);cursor:pointer}
+.tabs span.on{background:var(--teal);border-color:var(--teal);color:var(--ink)}
+.view{position:absolute;left:16px;right:16px;top:78px;bottom:14px;border-radius:10px;overflow:hidden;background:var(--ink);border:1px solid var(--hair);display:none;cursor:zoom-in}
+.view.on{display:block}
+.screens.big .view{cursor:zoom-out}
+
+/* trader view */
+.tr{padding:10px 14px;height:100%;position:relative}
+.tr .st{font-size:10px;letter-spacing:.06em;color:var(--paper3);display:flex;align-items:center;gap:7px}
+.tr .st i{width:7px;height:7px;border-radius:50%;background:var(--paper4)}
+.tr .st i.live{background:var(--teal);box-shadow:0 0 8px var(--teal);animation:blink 1.4s infinite}
+@keyframes blink{50%{opacity:.35}}
+.tr .eq{font-family:var(--disp);font-size:36px;font-weight:600;margin-top:5px;line-height:1}
+.tr .eq small{font-size:18px;color:var(--paper3);margin-left:2px}
+.tr .dl{font-size:12px;margin-top:4px}
+.up{color:var(--teal)}.dn{color:var(--pink)}
+.tr svg{position:absolute;left:0;right:0;top:82px;width:100%;height:46px}
+.tr .kp{position:absolute;left:14px;right:14px;top:136px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tr .kp div{border-left:2px solid var(--hair2);padding-left:8px}
+.tr .kp label{display:block;font-size:8.5px;letter-spacing:.14em;color:var(--paper3)}
+.tr .kp b{font-family:var(--disp);font-size:16px;font-weight:500}
+.tr .ls{position:absolute;left:14px;right:14px;bottom:6px;font-size:10.5px;border-top:1px solid var(--hair);padding-top:4px}
+.tr .ls div{display:flex;justify-content:space-between;padding:2px 0;color:var(--paper2)}
+.tr .err{position:absolute;right:14px;top:10px;font-size:10px;color:var(--pink);max-width:220px;text-align:right}
+
+/* cam / server views */
+.cam img{width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.9) contrast(1.05)}
+.cam .lb{position:absolute;left:10px;top:9px;font-size:10px;letter-spacing:.1em;background:rgba(15,10,30,.7);padding:3px 8px;border-radius:8px}
+.cam .lb i{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--pink);margin-right:6px;animation:blink 1.2s infinite}
+.cam .off{position:absolute;inset:0;display:none;align-items:center;justify-content:center;color:var(--paper3);font-size:11px;letter-spacing:.1em}
+.ph{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--paper3);font-size:11px;letter-spacing:.08em;text-align:center;padding:20px}
+.ph svg{width:40px;height:40px;stroke:var(--purple);fill:none;stroke-width:1.4}
+.ph b{color:var(--paper);font-weight:400;font-size:13px}
+
+/* music (Rylix style: colour from the cover, Figtree) */
+.music{top:644px;height:204px;font-family:"Figtree","Segoe UI",sans-serif;transition:background 1.2s}
+.music::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse at 0% 0%,rgba(var(--song),.75),transparent 70%),linear-gradient(160deg,rgba(var(--song),.35),transparent 60%);transition:background 1.2s;pointer-events:none}
+.music>*{position:relative}
+.music .h{font-family:var(--mono);color:rgba(243,238,250,.6)}
+.mrow{display:flex;gap:14px;padding:12px 16px 0;align-items:center}
+.cover{width:84px;height:84px;border-radius:10px;background:var(--ink3) center/cover;flex:none;box-shadow:0 10px 30px rgba(0,0,0,.45);display:grid;place-items:center}
+.cover svg{width:30px;height:30px;stroke:var(--paper3);fill:none;stroke-width:1.5}
+.cover.has svg{display:none}
+.meta{min-width:0;flex:1}
+.meta .ti{font-size:20px;font-weight:800;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em}
+.meta .ar{font-size:14px;font-weight:500;color:rgba(243,238,250,.72);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta .src{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--paper3);margin-top:7px}
+.prog{margin:14px 16px 0;display:flex;align-items:center;gap:10px;font-size:11px;color:rgba(243,238,250,.65);font-variant-numeric:tabular-nums}
+.bar{flex:1;height:4px;border-radius:2px;background:rgba(243,238,250,.18);overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--paper);border-radius:2px;transition:width .5s linear}
+.ctl{display:flex;align-items:center;gap:10px;padding:10px 16px 0}
+.ctl button{width:34px;height:34px;border-radius:50%;border:none;background:transparent;color:var(--paper);cursor:pointer;display:grid;place-items:center}
+.ctl button svg{width:18px;height:18px;fill:currentColor}
+.ctl button.pp{width:40px;height:40px;background:var(--paper);color:var(--ink)}
+.ctl button:hover{color:var(--teal)}.ctl button.pp:hover{background:var(--teal);color:var(--ink)}
+.pl{margin-left:auto;display:flex;align-items:center;gap:8px;padding:4px 12px 4px 4px;border-radius:20px;border:1px solid var(--hair2);cursor:pointer;width:200px;min-width:0;background:rgba(15,10,30,.35)}
+.pl div{min-width:0;flex:1}
+.pl:hover{border-color:var(--teal)}
+.pl img{width:26px;height:26px;border-radius:50%;object-fit:cover;flex:none}
+.pl span{display:block;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pl small{display:block;font-family:var(--mono);font-size:8.5px;letter-spacing:.12em;color:var(--paper3);font-weight:400}
+
+/* system */
+.sys{top:864px;height:126px;padding:0}
+.sys .rows{padding:10px 16px 0}
+.mt{display:grid;grid-template-columns:44px 1fr 46px;align-items:center;gap:10px;font-size:10.5px;letter-spacing:.1em;color:var(--paper2);margin-bottom:9px}
+.mt .tk{height:6px;border-radius:3px;background:rgba(243,238,250,.08);overflow:hidden}
+.mt .tk i{display:block;height:100%;width:0;border-radius:3px;transition:width .8s}
+.mt b{text-align:right;color:var(--paper);font-weight:400}
+
+/* ---------- switch ports (TL-SG1024DE, data and actions from PortTik through the hub) ---------- */
+.pw{--neon:#22e6d4;--neon2:#b47cff;--line:rgba(34,230,212,.2);--txt:#e2f7f4;--muted:rgba(226,247,244,.48);
+  position:absolute;left:92px;top:18px;width:1376px;z-index:3;font-family:var(--mono);color:var(--txt);
+  border:1px solid var(--line);border-radius:10px;padding:11px 16px 10px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(34,230,212,.04),rgba(155,77,255,.02)),rgba(13,9,26,.12);
+  box-shadow:0 0 0 1px rgba(34,230,212,.04) inset,0 0 30px rgba(34,230,212,.06)}
+.pw::before{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(34,230,212,.035) 0 1px,transparent 1px 3px);mix-blend-mode:screen}
+.pw::after{content:"";position:absolute;left:0;right:0;height:60px;top:-60px;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(34,230,212,.07),transparent);animation:pwsweep 6s linear infinite}
+@keyframes pwsweep{to{top:110%}}
+.pw .corner{position:absolute;width:14px;height:14px;border-color:var(--neon);border-style:solid;opacity:.8}
+.pw .c1{top:-1px;left:-1px;border-width:2px 0 0 2px;border-radius:10px 0 0 0}.pw .c2{top:-1px;right:-1px;border-width:2px 2px 0 0;border-radius:0 10px 0 0}
+.pw .c3{bottom:-1px;left:-1px;border-width:0 0 2px 2px;border-radius:0 0 0 10px}.pw .c4{bottom:-1px;right:-1px;border-width:0 2px 2px 0;border-radius:0 0 10px 0}
+.p-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;height:30px}
+.p-ico{width:18px;height:12px;border:1.5px solid var(--neon);border-radius:2px;position:relative;box-shadow:0 0 6px var(--neon);flex:none}
+.p-ico::after{content:"";position:absolute;inset:3px 3px auto 3px;height:2px;background:repeating-linear-gradient(90deg,var(--neon) 0 2px,transparent 2px 4px)}
+.p-title{font-weight:800;font-size:14px;letter-spacing:.08em;text-transform:uppercase;position:relative;color:#f1fffc;text-shadow:0 0 8px rgba(34,230,212,.6);white-space:nowrap}
+.p-title::before,.p-title::after{content:attr(data-text);position:absolute;left:0;top:0;opacity:.7;pointer-events:none}
+.p-title::before{color:var(--pink);animation:pwglitch 3.2s infinite steps(1);clip-path:inset(0 0 60% 0)}
+.p-title::after{color:var(--teal);animation:pwglitch 2.7s infinite steps(1) reverse;clip-path:inset(55% 0 0 0)}
+@keyframes pwglitch{0%,88%,100%{transform:none;opacity:0}89%{transform:translate(-2px,0);opacity:.8}92%{transform:translate(2px,1px);opacity:.8}95%{transform:translate(-1px,-1px);opacity:.8}}
+.p-lbl{font-size:11px;color:var(--muted);margin-left:18px;white-space:nowrap}.p-lbl::before{content:"> ";color:var(--neon)}
+.p-seg{display:flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.p-btn{font:inherit;font-size:11px;color:var(--muted);background:transparent;border:0;padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:6px;border-right:1px solid var(--line);transition:.2s;position:relative;white-space:nowrap}
+.p-seg .p-btn:last-child{border-right:0}
+.p-btn:hover{color:var(--txt);background:rgba(34,230,212,.06)}
+.p-btn.on{color:#04161a;background:rgba(34,230,212,.78);box-shadow:0 0 14px rgba(34,230,212,.55);font-weight:600}
+.p-btn.ask{color:#fff;background:rgba(255,62,165,.28);box-shadow:0 0 0 1px var(--pink) inset,0 0 14px rgba(255,62,165,.5);animation:pwask 1s ease-in-out infinite}
+@keyframes pwask{50%{background:rgba(255,62,165,.5)}}
+@keyframes pwblink{50%{opacity:0}}
+.p-btn svg{width:12px;height:12px}
+.p-btn.solo{border:1px solid var(--line);border-radius:6px}.p-btn.solo:hover{border-color:var(--neon);box-shadow:0 0 10px rgba(34,230,212,.3)}
+.pw.locked .p-seg .p-btn{opacity:.45;cursor:default}
+.p-stat{margin-left:auto;display:flex;gap:14px;font-size:11px;color:var(--muted);white-space:nowrap}
+.p-stat b{color:var(--neon);font-weight:600}
+.p-stat .lv{animation:pwblink 1s steps(1) infinite}
+.p-grid{display:grid;grid-template-columns:repeat(12,1fr);gap:6px}
+.p-port{--c:#4a5560;position:relative;height:46px;border-radius:5px;padding:5px 8px;border:1px solid rgba(255,255,255,.09);background:linear-gradient(180deg,color-mix(in srgb,var(--c) 7%,transparent),transparent);cursor:pointer;overflow:hidden;
+  transition:transform .2s,border-color .2s,box-shadow .2s;animation:pwboot .4s backwards}
+@keyframes pwboot{from{opacity:0;transform:translateY(4px) scale(.98);filter:blur(2px)}}
+.p-port:hover{transform:translateY(-2px);border-color:var(--c);box-shadow:0 0 12px color-mix(in srgb,var(--c) 45%,transparent)}
+.p-port .n{font-size:12px;font-weight:800;color:#dfeee9;display:flex;align-items:center;gap:5px}
+.p-port .led{width:6px;height:6px;border-radius:50%;background:#3a4148}
+.p-port .name{font-size:9.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.p-port .vl{position:absolute;left:0;right:0;bottom:0;height:3px;background:var(--c);opacity:.65}
+.p-port.res{opacity:.45}.p-port.res .n,.p-port.res .name{color:rgba(226,247,244,.3)}
+.p-port.up{border-color:color-mix(in srgb,var(--c) 35%,transparent)}
+.p-port.up .led{background:var(--neon);box-shadow:0 0 6px var(--neon),0 0 12px var(--neon);animation:pwact .9s infinite}
+@keyframes pwact{0%,100%{opacity:1}40%{opacity:.25}55%{opacity:1}70%{opacity:.5}}
+.p-port.up .name{color:var(--txt)}
+.p-port.up .vl{opacity:1;box-shadow:0 0 8px var(--c)}
+.p-port.up .vl::after{content:"";position:absolute;top:0;bottom:0;width:30%;background:linear-gradient(90deg,transparent,#fff,transparent);animation:pwpacket 1.4s linear infinite}
+@keyframes pwpacket{from{left:-30%}to{left:100%}}
+.p-spark{position:absolute;right:6px;top:7px;display:flex;gap:1.5px;align-items:flex-end;height:12px}
+.p-spark i{width:2px;height:2px;background:var(--neon);opacity:.75;transition:height .8s}
+.p-port.me{border:1px solid var(--neon2);box-shadow:0 0 0 1px rgba(180,124,255,.25) inset,0 0 16px rgba(180,124,255,.28)}
+.p-port.me .name{color:#fff;font-weight:600}
+.p-port.me::before{content:"YOU";position:absolute;right:6px;bottom:7px;font-size:8px;font-weight:800;letter-spacing:.1em;color:var(--neon2);text-shadow:0 0 6px var(--neon2)}
+.p-port.flash{animation:pwflash .6s}
+@keyframes pwflash{50%{box-shadow:0 0 22px 4px var(--neon2);background:rgba(180,124,255,.14)}}
+.p-tip{position:absolute;pointer-events:none;z-index:30;font-family:var(--mono);font-size:11px;line-height:1.6;color:#e2f7f4;background:rgba(10,7,20,.94);border:1px solid var(--teal);border-radius:6px;padding:8px 10px;
+  box-shadow:0 0 18px rgba(34,230,212,.25);opacity:0;transform:translateY(4px);transition:opacity .15s,transform .15s;min-width:190px;white-space:nowrap}
+.p-tip.show{opacity:1;transform:none}.p-tip .k{color:rgba(226,247,244,.48)}.p-tip .v{color:var(--teal)}
+.p-log{margin-top:9px;font-size:10.5px;color:var(--muted);height:15px;overflow:hidden;white-space:nowrap}
+.p-log span{color:var(--neon)}.p-log.err{color:#ff9ac9}
+.p-cursor{display:inline-block;width:6px;height:11px;background:var(--neon);vertical-align:-1px;margin-left:2px;animation:pwblink 1s steps(1) infinite}
+.pw.down .lost{display:flex}
+.pw.down>*:not(.lost){animation:jit 2.6s steps(1) infinite;filter:saturate(.4) brightness(.55)}
+.lite .pw{backdrop-filter:none;background:rgba(13,9,26,.9)}
+.bgonly .pw,.bgonly .p-tip{display:none!important}
+.lite .wd{backdrop-filter:none;background:rgba(24,17,41,.94)}
+.lite .glow{animation:none}
+.static *,.static *::before,.static *::after{animation:none!important;transition:none!important}
+.bgonly .wd,.bgonly .hubdown,.bgonly .blip,.bgonly .coord{display:none!important}
+.bgonly.static .spin{transform:rotate(-40deg)}
+.lost{position:absolute;inset:0;z-index:6;display:none;flex-direction:column;align-items:center;justify-content:center;gap:6px;overflow:hidden;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(255,62,165,.06) 0 2px,transparent 2px 4px),rgba(15,10,30,.55)}
+.view.down .lost{display:flex}
+.view.down #camImg{display:none}.view.down #camLast{display:block!important}
+.view.down>*:not(.lost){animation:jit 2.6s steps(1) infinite;filter:saturate(.4) brightness(.55)}
+@keyframes jit{0%,100%{transform:none}7%{transform:translate(-3px,1px) skewX(-4deg);filter:hue-rotate(80deg) saturate(2) brightness(.7)}8%{transform:translate(4px,0)}9%{transform:none}43%{transform:translate(2px,-2px)}44%{transform:none;clip-path:inset(30% 0 52% 0)}45%{clip-path:none}71%{transform:translate(-5px,0) scaleY(1.02)}72%{transform:none}}
+.lost .bars{position:absolute;inset:0;background:linear-gradient(transparent 0 46%,rgba(34,230,212,.18) 46% 48%,transparent 48% 70%,rgba(255,62,165,.22) 70% 71%,transparent 71%);animation:roll 1.7s linear infinite}
+@keyframes roll{from{transform:translateY(-100%)}to{transform:translateY(100%)}}
+.lost b{position:relative;font-family:var(--disp);font-size:24px;font-weight:700;letter-spacing:.12em;color:var(--paper);text-shadow:2px 0 var(--pink),-2px 0 var(--teal);animation:gl 1.1s steps(2) infinite}
+.lost b::before,.lost b::after{content:attr(data-t);position:absolute;left:0;top:0;width:100%;overflow:hidden}
+.lost b::before{color:var(--teal);clip-path:inset(0 0 60% 0);transform:translate(-4px,-1px);animation:sl 0.9s steps(3) infinite}
+.lost b::after{color:var(--pink);clip-path:inset(55% 0 0 0);transform:translate(4px,1px);animation:sl 1.3s steps(3) infinite reverse}
+@keyframes sl{0%{clip-path:inset(0 0 70% 0)}33%{clip-path:inset(40% 0 35% 0)}66%{clip-path:inset(75% 0 5% 0)}100%{clip-path:inset(10% 0 80% 0)}}
+@keyframes gl{0%{transform:none}50%{transform:translate(1px,-1px) skewX(6deg)}}
+.lost span{position:relative;font-size:10px;letter-spacing:.16em;color:var(--pink);background:rgba(15,10,30,.8);padding:3px 8px;border:1px solid rgba(255,62,165,.5);max-width:90%;text-align:center}
+.lost i{position:relative;font-style:normal;font-size:9px;letter-spacing:.14em;color:var(--paper3)}
+.paused *,.paused *::before,.paused *::after{animation-play-state:paused!important}
+.hubdown{position:absolute;left:1492px;top:1000px;width:400px;text-align:center;font-size:10px;letter-spacing:.12em;color:var(--pink);display:none}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="topo" width="2112" height="1188"></canvas>
+  <div class="glow"></div>
+
+  <div class="radar" id="radar">
+    <div class="rr" style="width:280px;height:280px"></div>
+    <div class="rr" style="width:560px;height:560px"></div>
+    <div class="rr" style="width:840px;height:840px;border-color:rgba(34,230,212,.12)"></div>
+    <div class="spin"></div>
+    <div class="cross"></div>
+  </div>
+
+  <div class="coord" style="left:600px;top:206px">0.0000° N · 0.0000° E · NULL ISLAND</div>
+  <div class="coord" style="left:760px;top:930px">SWEEP 7.0 s · <span class="tick" id="sweepN">0</span> PASSES</div>
+  <div class="giant">NULL<span>/</span>WAVE</div>
+
+  <!-- switch ports -->
+  <div class="pw" id="pw">
+    <span class="corner c1"></span><span class="corner c2"></span><span class="corner c3"></span><span class="corner c4"></span>
+    <div class="p-head">
+      <div class="p-ico"></div>
+      <div class="p-title" id="pTitle" data-text="Porty – TL-SG1024DE">Porty – TL-SG1024DE</div>
+      <span class="p-lbl" id="pLbl">Port 24 (tvoje PC):</span>
+      <div class="p-seg" id="pModes">
+        <button class="p-btn" data-mode="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="3" width="12" height="18" rx="2"/><path d="M11 18h2"/></svg><span>LAN</span></button>
+        <button class="p-btn" data-mode="vodafone"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20v-3M9 20v-7M14 20v-11M19 20V5"/></svg><span>ISP A</span></button>
+        <button class="p-btn" data-mode="starlink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20l6-6M8 8l8 8M6 10l4-4 8 8-4 4z"/><path d="M15 5a4 4 0 0 1 4 4"/></svg><span>ISP B</span></button>
+      </div>
+      <button class="p-btn solo" id="pOpen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Otevřít port</button>
+      <div class="p-stat">
+        <span>LINK <b id="pUp">0</b>/<span id="pTotal">24</span></span>
+        <span>UPTIME <b id="pUptime">00:00:00</b></span>
+        <span><b class="lv" id="pDot">●</b> <span id="pLive">LIVE</span></span>
+      </div>
+    </div>
+    <div class="p-grid" id="pGrid"></div>
+    <div class="p-log" id="pLog">&gt; init switch@TL-SG1024DE ...<span class="p-cursor"></span></div>
+    <div class="lost"><div class="bars"></div><b id="pLostT" data-t="SWITCH LINK LOST">SWITCH LINK LOST</b><span id="pLostWhy">TL-SG1024DE NEODPOVÍDÁ</span><i id="pLostHint">ZKOUŠÍM ZNOVU…</i></div>
+  </div>
+  <div class="p-tip" id="pTip"></div>
+
+  <!-- clock -->
+  <div class="wd dial">
+    <div class="h"><span>LOCAL TIME</span><b id="tzCity"></b></div>
+    <svg viewBox="0 0 250 250" id="dial"></svg>
+    <div class="big"><b id="hm">--:--</b><small id="dt">---</small></div>
+    <div class="side">
+      <div class="t"><label>UPTIME</label><span id="up">--</span></div>
+      <div class="p"><label>DEVICES</label><span id="devs">--</span></div>
+      <div class="v"><label>WEEK</label><span id="wk">--</span></div>
+    </div>
+  </div>
+
+  <!-- screens -->
+  <div class="wd screens" id="screens">
+    <div class="h"><span>SCREENS</span><div class="nav"><button id="prev">‹</button><b id="pos">1 / 2</b><button id="next">›</button></div></div>
+    <div class="tabs" id="tabs"><span data-i="0" class="on">TRADER</span><span data-i="1">CAMERA</span></div>
+
+    <div class="view on" data-v="trader">
+      <div class="tr">
+        <div class="st"><i id="trLive"></i><span id="trStatus">načítám…</span></div>
+        <div class="eq" id="trEq">--</div>
+        <div class="dl" id="trDl"></div>
+        <svg viewBox="0 0 366 70" preserveAspectRatio="none" id="trSpark"></svg>
+        <div class="kp">
+          <div><label>OBCHODY</label><b id="trN">--</b></div>
+          <div><label>ÚSPĚŠNOST</label><b id="trW">--</b></div>
+          <div><label>POZICE</label><b id="trOp">--</b></div>
+        </div>
+        <div class="ls" id="trList"></div>
+        <div class="err" id="trErr"></div>
+      </div>
+      <div class="lost"><div class="bars"></div><b data-t="EXCHANGE LINK LOST">EXCHANGE LINK LOST</b><span id="trLost">TRADER HOST NEODPOVÍDÁ</span><i>ZKOUŠÍM ZNOVU…</i></div>
+    </div>
+
+    <div class="view cam" data-v="cam85">
+      <img id="camLast" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none">
+      <img id="camImg" alt="">
+      <div class="lb"><i></i><span id="camLabel">CAMERA</span></div>
+      <div class="lost"><div class="bars"></div><b data-t="SIGNAL LOST">SIGNAL LOST</b><span id="camLabel2">CAMERA</span><i>ZKOUŠÍM ZNOVU…</i></div>
+    </div>
+  </div>
+
+  <!-- music -->
+  <div class="wd music" id="music">
+    <div class="h"><span>NOW PLAYING</span><b id="mApp">SPOTIFY</b></div>
+    <div class="mrow">
+      <div class="cover" id="mCover"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/></svg></div>
+      <div class="meta"><div class="ti" id="mTi">Nic nehraje</div><div class="ar" id="mAr">Pusť si playlist ↓</div><div class="src" id="mSrc"></div></div>
+    </div>
+    <div class="prog"><span id="mPos">0:00</span><div class="bar"><i id="mBar"></i></div><span id="mDur">0:00</span></div>
+    <div class="ctl">
+      <button id="bPrev" title="Předchozí"><svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg></button>
+      <button id="bPP" class="pp" title="Přehrát / pauza"><svg viewBox="0 0 24 24" id="ppIcon"><path d="M8 5v14l11-7z"/></svg></button>
+      <button id="bNext" title="Další"><svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg></button>
+      <div class="pl" id="bPl" title="Pustit můj playlist ve Spotify"><img id="plImg" alt=""><div><small>MŮJ PLAYLIST ▶</small><span id="plTi">Spotify</span></div></div>
+    </div>
+  </div>
+
+  <!-- system -->
+  <div class="wd sys">
+    <div class="h"><span>SYSTEM</span><b id="host">--</b></div>
+    <div class="rows">
+      <div class="mt"><span>CPU</span><div class="tk"><i id="cpuB" style="background:var(--teal)"></i></div><b id="cpu">--</b></div>
+      <div class="mt"><span>RAM</span><div class="tk"><i id="ramB" style="background:var(--purple)"></i></div><b id="ram">--</b></div>
+      <div class="mt"><span>NET</span><div class="tk"><i id="netB" style="background:var(--pink)"></i></div><b id="net">--</b></div>
+    </div>
+  </div>
+  <div class="hubdown" id="hubdown">HUB NEBĚŽÍ · SPUSŤ NULLWAVE</div>
+</div>
+
+<script>
+const Q = new URLSearchParams(location.search);
+for (const m of ['lite','static','bgonly']) if (Q.has(m) || (window.NULLWAVE||{})[m]) document.documentElement.classList.add(m);
+try{ document.getElementById('tzCity').textContent=Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop().replace(/_/g,' ').toUpperCase(); }catch{}
+const C = window.NULLWAVE || {hub:'http://127.0.0.1:4791',key:''};
+const $ = (id) => document.getElementById(id);
+const api = (p) => C.hub + p + (p.includes('?') ? '&' : '?') + 'k=' + C.key;
+let hubOk = true;
+async function get(p){ if(document.documentElement.classList.contains('paused')) return null; try{ const r = await fetch(api(p),{cache:'no-store'}); hubOk = true; $('hubdown').style.display='none'; return await r.json(); }catch(e){ hubOk=false; $('hubdown').style.display='block'; return null; } }
+const post = (p) => fetch(api(p),{method:'POST'}).catch(()=>{});
+const BG = Q.has('bgonly');                                             // secondary monitor: background only, no widgets to feed
+const asleep = () => document.documentElement.classList.contains('paused');
+
+/* ---------- fit 1920x1080 stage to screen ---------- */
+function fit(){ const s = Math.max(innerWidth/1920, innerHeight/1080); $('stage').style.transform = `scale(${s})`; }
+addEventListener('resize', fit); fit();
+
+/* ---------- contour map (drawn once, CSS drifts it) ---------- */
+(function(){
+  const c=$('topo'),x=c.getContext('2d'),W0=c.width,H0=c.height,ox=96,oy=54;
+  x.fillStyle='#0f0a1e';x.fillRect(0,0,W0,H0);
+  const hills=[[900+ox,470+oy,420,1.0],[420+ox,840+oy,300,.7],[1600+ox,900+oy,260,.55],[260+ox,220+oy,240,.45],[1500+ox,120+oy,220,.5],[700+ox,120+oy,180,.35]];
+  const f=(px,py)=>{let v=0;for(const[h,k,r,a]of hills){v+=a*Math.exp(-((px-h)**2+(py-k)**2)/(r*r))}return v+.06*Math.sin(px/97+py/143)+.05*Math.cos(px/61-py/89)+.03*Math.sin((px+py)/41)};
+  const st=6,W=Math.ceil(W0/st)+1,H=Math.ceil(H0/st)+1,g=new Float32Array(W*H);
+  for(let j=0;j<H;j++)for(let i=0;i<W;i++)g[j*W+i]=f(i*st,j*st);
+  const SEG={1:[['L','T']],2:[['T','R']],3:[['L','R']],4:[['R','B']],5:[['L','T'],['R','B']],6:[['T','B']],7:[['L','B']],8:[['B','L']],9:[['B','T']],10:[['T','R'],['B','L']],11:[['B','R']],12:[['R','L']],13:[['R','T']],14:[['T','L']]};
+  for(let L=-0.1,n=0;L<1.15;L+=0.045,n++){
+    const major=n%4===0; x.beginPath();
+    for(let j=0;j<H-1;j++)for(let i=0;i<W-1;i++){
+      const a=g[j*W+i],b=g[j*W+i+1],cc=g[(j+1)*W+i+1],d=g[(j+1)*W+i];
+      const idx=(a>L)|((b>L)<<1)|((cc>L)<<2)|((d>L)<<3); if(!idx||idx===15)continue;
+      const X=i*st,Y=j*st,t=(p,q)=>(L-p)/(q-p);
+      const P={T:[X+st*t(a,b),Y],R:[X+st,Y+st*t(b,cc)],B:[X+st*t(d,cc),Y+st],L:[X,Y+st*t(a,d)]};
+      for(const[p,q]of SEG[idx]){x.moveTo(P[p][0],P[p][1]);x.lineTo(P[q][0],P[q][1])}
+    }
+    x.strokeStyle=L>0.8?`rgba(34,230,212,${major?.5:.28})`:`rgba(243,238,250,${major?.15:.065})`;
+    x.lineWidth=major?1.2:.7;x.stroke();
+  }
+})();
+
+/* ---------- clock + dial ---------- */
+const DAYS=['NE','PO','ÚT','ST','ČT','PÁ','SO'],MON=['LED','ÚNO','BŘE','DUB','KVĚ','ČVN','ČVC','SRP','ZÁŘ','ŘÍJ','LIS','PRO'];
+function arc(r,deg,col,w){deg=Math.min(deg,359.9);const a=deg*Math.PI/180,X=125+r*Math.sin(a),Y=125-r*Math.cos(a);return `<path d="M125 ${125-r} A${r} ${r} 0 ${deg>180?1:0} 1 ${X} ${Y}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/>`}
+let ticks='';
+for(let i=0;i<60;i++){const a=i*6*Math.PI/180,long=i%5===0,r1=long?104:110;ticks+=`<line x1="${125+r1*Math.sin(a)}" y1="${125-r1*Math.cos(a)}" x2="${125+118*Math.sin(a)}" y2="${125-118*Math.cos(a)}" stroke="rgba(243,238,250,${long?.45:.18})" stroke-width="${long?2:1}"/>`}
+const defs=`<defs><linearGradient id="vg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#22e6d4"/><stop offset=".55" stop-color="#9b4dff"/><stop offset="1" stop-color="#ff3ea5"/></linearGradient></defs>`;
+function clock(){
+  const d=new Date(),h=d.getHours(),m=d.getMinutes(),s=d.getSeconds();
+  $('hm').textContent=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+  $('dt').textContent=`${DAYS[d.getDay()]} · ${d.getDate()} ${MON[d.getMonth()]}`;
+  const sec=Math.floor(s);
+  $('dial').innerHTML=defs+ticks+
+    `<line x1="${125+104*Math.sin(sec*6*Math.PI/180)}" y1="${125-104*Math.cos(sec*6*Math.PI/180)}" x2="${125+120*Math.sin(sec*6*Math.PI/180)}" y2="${125-120*Math.cos(sec*6*Math.PI/180)}" stroke="#ff3ea5" stroke-width="3" stroke-linecap="round"/>`+
+    `<circle cx="125" cy="125" r="92" fill="none" stroke="rgba(243,238,250,.08)" stroke-width="6"/>`+arc(92,(h*60+m)/1440*360,'url(#vg)',6)+
+    `<circle cx="125" cy="125" r="80" fill="none" stroke="rgba(243,238,250,.06)" stroke-width="2"/>`+arc(80,(m*60+s)/3600*360,'#f3eefa',2);
+  const on=new Date(d);on.setHours(0,0,0,0);on.setDate(on.getDate()+3-((on.getDay()+6)%7));const w1=new Date(on.getFullYear(),0,4);
+  $('wk').textContent=1+Math.round(((on-w1)/864e5-3+((w1.getDay()+6)%7))/7);
+}
+if(!BG){ clock(); setInterval(()=>{ if(!asleep()) clock(); },1000); }
+let passes=0; if(!BG) setInterval(()=>{ if(!asleep()) $('sweepN').textContent=++passes; },7000);
+
+/* ---------- system + devices ---------- */
+const BLIP_POS={traderhost:[-190,-150],cam85:[230,110],server:[110,-260]};
+const fmtUp=(s)=>{const h=Math.floor(s/3600),m=Math.floor(s%3600/60);return h>=24?`${Math.floor(h/24)}d ${h%24}h`:`${h}h ${m}m`};
+async function stats(){
+  const s=await get('/api/stats'); if(!s) return;
+  if(!Q.has('lite')&&!Q.has('static')){ const h=document.documentElement.classList; h.toggle('lite',s.mode==='lite'||s.mode==='static'); h.toggle('static',s.mode==='static'); }
+  if(BG) return;                                       // only the mode matters here
+  camState(s.cam);
+  $('host').textContent=s.host; $('up').textContent=fmtUp(s.uptime);
+  $('cpu').textContent=s.cpu+'%'; $('cpuB').style.width=s.cpu+'%';
+  const rp=Math.round(s.memUsed/s.memTotal*100); $('ram').textContent=rp+'%'; $('ramB').style.width=rp+'%';
+  const ps=Object.entries(s.pings), up=ps.filter(([,p])=>p.ok);
+  $('devs').textContent=`${up.length} / ${ps.length} online`;
+  const avg=up.length?Math.round(up.reduce((a,[,p])=>a+p.ms,0)/up.length):0;
+  $('net').textContent=up.length?avg+' ms':'—'; $('netB').style.width=Math.min(100,avg*4)+'%';
+  const R=$('radar');
+  for(const [id,p] of ps){
+    let el=document.getElementById('b-'+id);
+    if(!el){el=document.createElement('div');el.className='blip';el.id='b-'+id;const xy=BLIP_POS[id]||[0,0];el.style.left=xy[0]+'px';el.style.top=xy[1]+'px';el.innerHTML='<i></i><span></span>';R.appendChild(el)}
+    el.classList.toggle('down',!p.ok);
+    el.querySelector('span').innerHTML=`<b>${p.label}</b>${p.host} · ${p.ok?p.ms+' ms':'offline'}`;
+  }
+  if(!document.getElementById('b-self')){const el=document.createElement('div');el.className='blip self';el.id='b-self';el.style.left='-60px';el.style.top='60px';el.innerHTML=`<i></i><span><b>THIS PC</b>${s.host}</span>`;R.appendChild(el)}
+}
+stats(); setInterval(stats,BG?15000:3000);
+
+/* ---------- screens carousel ---------- */
+let cur=0; const views=[...document.querySelectorAll('.view')], tabs=[...document.querySelectorAll('#tabs span')];
+function show(i){
+  cur=(i+views.length)%views.length;
+  views.forEach((v,k)=>v.classList.toggle('on',k===cur)); tabs.forEach((t,k)=>t.classList.toggle('on',k===cur));
+  $('pos').textContent=`${cur+1} / ${views.length}`;
+  const cam=views[cur].dataset.v==='cam85';
+  if(cam&&!asleep()){ views[cur].classList.remove('down'); camSince=Date.now(); $('camImg').src=api('/cam85.mjpg')+'&t='+Date.now(); }
+  else camStop();
+  if(views[cur].dataset.v==='trader') trader();
+}
+// Stop the MJPEG stream for real: a blank image replaces it, which makes Chromium close the connection.
+const BLANK='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+let camSince=0, camRetry=null;
+function camStop(){ camSince=0; clearTimeout(camRetry); const im=$('camImg'); if(im.hasAttribute('src')&&im.getAttribute('src')!==BLANK) im.src=BLANK; }
+// The hub keeps the connection open while the camera is away, so "signal lost" comes from the hub's own state:
+// no fresh frame for a few seconds -> glitch over the last picture; frames are back -> live again.
+function camState(c){
+  const v=views.find(x=>x.dataset.v==='cam85');
+  if(!c||!camSince||views[cur]!==v||asleep()) return;
+  if(c.live){ if(v.classList.contains('down')&&Date.now()-camSince>1500) v.classList.remove('down'); }
+  else if(Date.now()-camSince>7000&&!v.classList.contains('down')){ v.classList.add('down'); $('camLast').src=api('/cam85.jpg')+'&t='+Date.now(); }
+}
+$('prev').onclick=()=>show(cur-1); $('next').onclick=()=>show(cur+1);
+tabs.forEach(t=>t.onclick=()=>show(+t.dataset.i));
+views.forEach(v=>v.onclick=()=>$('screens').classList.toggle('big'));
+$('camImg').onerror=()=>{ if(!camSince) return; const v=views.find(x=>x.dataset.v==='cam85'); v.classList.add('down'); $('camLast').src=api('/cam85.jpg')+'&t='+Date.now();
+  clearTimeout(camRetry); if(views[cur]===v) camRetry=setTimeout(()=>{ if(views[cur]===v&&!asleep()) show(cur); },6000); };
+
+/* trader */
+const usd=(v)=>'$'+v.toLocaleString('cs-CZ',{minimumFractionDigits:2,maximumFractionDigits:2});
+async function trader(){
+  if(BG||views[cur].dataset.v!=='trader') return;
+  const tv=views.find(x=>x.dataset.v==='trader');
+  const t=await get('/api/trader');
+  if(!t){ if(!hubOk){ tv.classList.add('down'); $('trLost').textContent='HUB NEBĚŽÍ'; } return; }
+  tv.classList.toggle('down',!t.ok); if(!t.ok) $('trLost').textContent=String(t.error||'TRADER HOST NEODPOVÍDÁ').toUpperCase().slice(0,60);
+  $('trErr').textContent='';
+  const d=t.data; if(!d) return;
+  $('trStatus').textContent=d.status; $('trLive').className=/obchoduje/.test(d.status)?'live':'';
+  const e=d.equity, diff=e-d.start_capital, pc=diff/d.start_capital*100;
+  $('trEq').innerHTML=usd(e).replace(/,(\d\d)$/,'<small>,$1</small>');
+  $('trDl').innerHTML=`<span class="${diff>=0?'up':'dn'}">${diff>=0?'▲ +':'▼ '}${usd(diff).replace('$-','-$')} (${pc>=0?'+':''}${pc.toFixed(2)} %)</span> <span style="color:var(--paper3)">od startu ${usd(d.start_capital)}</span>`;
+  const pts=d.recent_equity.map(p=>p[1]); const mn=Math.min(...pts),mx=Math.max(...pts),rg=(mx-mn)||1;
+  const xy=pts.map((v,i)=>[(i/((pts.length-1)||1))*366,64-((v-mn)/rg)*58]);
+  const line=xy.map(p=>p.map(n=>n.toFixed(1)).join(',')).join(' ');
+  $('trSpark').innerHTML=`<defs><linearGradient id="tg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#22e6d4" stop-opacity=".35"/><stop offset="1" stop-color="#22e6d4" stop-opacity="0"/></linearGradient><linearGradient id="tl" x1="0" x2="1"><stop offset="0" stop-color="#9b4dff"/><stop offset="1" stop-color="#22e6d4"/></linearGradient></defs>`+
+    `<polygon points="0,70 ${line} 366,70" fill="url(#tg)"/><polyline points="${line}" fill="none" stroke="url(#tl)" stroke-width="1.6"/>`+
+    `<line x1="0" x2="366" y1="${64-((d.start_capital-mn)/rg)*58}" y2="${64-((d.start_capital-mn)/rg)*58}" stroke="rgba(243,238,250,.25)" stroke-dasharray="3 5"/>`;
+  const tr=d.trades, wins=tr.filter(x=>x.pnl_usd>0).length;
+  $('trN').textContent=tr.length; $('trW').textContent=tr.length?Math.round(wins/tr.length*100)+' %':'—';
+  $('trOp').innerHTML=d.open?`<span class="${d.open.side==='LONG'?'up':'dn'}">${d.open.side||'OPEN'}</span>`:'žádná';
+  $('trList').innerHTML=tr.slice(-3).reverse().map(x=>`<div><span>${x.datum.slice(8,10)}.${x.datum.slice(5,7)}. ${x.cas} · ${x.smer} · krok ${x.krok}</span><span class="${x.pnl_usd>=0?'up':'dn'}">${x.pnl_usd>=0?'+':''}${x.pnl_usd.toFixed(2)}</span></div>`).join('');
+}
+if(!BG) setInterval(trader,15000);
+
+
+
+/* ---------- switch ports (TL-SG1024DE): the hub polls through PortTik's code, this only draws and asks ---------- */
+const DEMO = Q.has('demo');
+const PW = { v:null, els:new Map(), seen:-1, queue:[], typing:null, ask:null, askT:null, state:'' };
+const pApi = (p) => '/api/ports' + p + (DEMO ? (p.includes('?') ? '&' : '?') + 'demo=1' : '');
+const pPost = (p) => fetch(api(pApi(p)),{method:'POST'}).then(r=>r.json()).catch(()=>({ok:false,error:'hub neodpovídá'}));
+const pEsc = (t) => String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+/* typewriter log: lines are queued so none is cut off by the next one */
+function pSay(msg, err){ PW.queue.push({msg:String(msg),err:!!err}); if(PW.queue.length>4) PW.queue.splice(0,PW.queue.length-4); if(!PW.typing) pType(); }
+function pType(){
+  const it=PW.queue.shift(); if(!it){ PW.typing=null; return; }
+  const full='> '+it.msg, el=$('pLog'); let i=0; el.classList.toggle('err',it.err);
+  PW.typing=setInterval(()=>{
+    i=Math.min(full.length,i+2);
+    el.innerHTML=pEsc(full.slice(0,i)).replace(/::/g,'<span>::</span>')+'<span class="p-cursor"></span>';
+    if(i>=full.length){ clearInterval(PW.typing); PW.typing=setTimeout(pType, PW.queue.length?500:60); }
+  },14);
+}
+const fmtHMS=(s)=>[s/3600,s/60%60,s%60].map(v=>String(Math.floor(v)).padStart(2,'0')).join(':');
+function pTick(){ const v=PW.v; $('pUptime').textContent = v&&v.state==='live'&&v.since ? fmtHMS(Math.max(0,(Date.now()-v.since)/1000)) : '--:--:--'; }
+function pPort(p,i){
+  const el=document.createElement('div'); el.className='p-port'; el.dataset.n=p.n; el.style.animationDelay=(i*25)+'ms';
+  el.innerHTML='<div class="n"><span></span><span class="led"></span></div><div class="name"></div><div class="vl"></div><div class="p-spark"><i></i><i></i><i></i><i></i></div>';
+  el.firstChild.firstChild.textContent=p.n;
+  el.addEventListener('mouseenter',()=>pTipShow(p.n)); el.addEventListener('mouseleave',()=>$('pTip').classList.remove('show'));
+  el.addEventListener('click',()=>{ const q=PW.v&&PW.v.ports.find(x=>x.n===p.n); if(q) pSay(`port ${q.n} :: ${q.name} :: VLAN ${q.vlan==null?'?':q.vlan} :: ${q.link===true?'LINK UP'+(q.speed?' :: '+q.speed:''):q.link===false?'NO CARRIER':'stav neznámý'}`); });
+  return el;
+}
+function pTipShow(n){
+  const v=PW.v, p=v&&v.ports.find(x=>x.n===n), el=PW.els.get(n), tip=$('pTip'); if(!p||!el) return;
+  const rate=p.rx==null?'—':`${p.rx} / ${p.tx} pkt/s`;
+  tip.innerHTML=`<div><span class="k">port</span> <span class="v">#${p.n}${p.me?' (ty)':''}</span></div>`+
+    `<div><span class="k">vlan</span> <span class="v">${pEsc(p.vlanName)}</span> <span class="k">id ${p.vlan==null?'?':p.vlan}${p.vid!==p.vlan&&p.vid!=null?' (TL '+p.vid+')':''}</span></div>`+
+    `<div><span class="k">stav</span> <span class="v" style="color:${p.link?'var(--teal)':'#ff5b8e'}">${p.link===true?'LINK UP':p.link===false?'DOWN':'?'}</span></div>`+
+    `<div><span class="k">rychlost</span> <span class="v">${pEsc(p.speed||'—')}</span></div>`+
+    `<div><span class="k">rx / tx</span> <span class="v">${rate}</span></div>`+
+    (p.label?`<div><span class="k">popisek</span> <span class="v">${pEsc(p.label)}</span></div>`:'')+
+    (v.state!=='live'?'<div><span class="k">poslední známý stav</span></div>':'');
+  const pw=$('pw'), g=$('pGrid');
+  tip.style.left=Math.min(pw.offsetLeft+g.offsetLeft+el.offsetLeft, pw.offsetLeft+pw.offsetWidth-230)+'px';
+  tip.style.top=(pw.offsetTop+g.offsetTop+el.offsetTop+el.offsetHeight+8)+'px';
+  tip.classList.add('show');
+}
+function pRender(v){
+  const prev=PW.v; PW.v=v;
+  const live=v.state==='live', pw=$('pw'), grid=$('pGrid');
+  pw.style.display=v.state==='off'?'none':''; if(v.state==='off') return;   // widget switched off in hub/config.json
+  // odd ports on the top row, even on the bottom (like the real switch)
+  const order=[...v.ports.filter(p=>p.n%2),...v.ports.filter(p=>!(p.n%2))];
+  order.forEach((p,i)=>{
+    let el=PW.els.get(p.n); if(!el){ el=pPort(p,i); PW.els.set(p.n,el); }
+    const cls='p-port'+(p.link===true?' up':'')+(p.res?' res':'')+(p.me?' me':'');
+    const was=prev&&prev.ports.find(x=>x.n===p.n);
+    if(el.className.replace(' flash','')!==cls) el.className=cls;
+    if(was&&p.me&&was.mode!==p.mode){ el.classList.remove('flash'); void el.offsetWidth; el.classList.add('flash'); }
+    if(el.style.getPropertyValue('--c')!==p.color) el.style.setProperty('--c',p.color);
+    const nm=el.children[1]; if(nm.textContent!==p.name) nm.textContent=p.name;
+    const sp=el.children[3]; sp.style.display=p.link===true&&!p.me?'':'none';
+    [...sp.children].forEach((b,k)=>{ const h=p.spark&&p.spark.length?p.spark[Math.max(0,p.spark.length-4+k)]:0; b.style.height=(2+Math.round((h||0)*10))+'px'; });
+    if(grid.children[i]!==el) grid.insertBefore(el,grid.children[i]||null);
+  });
+  for(const [n,el] of PW.els) if(!v.ports.some(p=>p.n===n)){ el.remove(); PW.els.delete(n); }
+  const title='Porty – '+(v.title||'TL-SG1024DE'); if($('pTitle').textContent!==title){ $('pTitle').textContent=title; $('pTitle').dataset.text=title; }
+  $('pUp').textContent=v.up||0; $('pTotal').textContent=v.total||24;
+  $('pLbl').textContent=`Port ${v.adminPort||24} (tvoje PC):`;
+  $('pLive').textContent=v.busy?'ZÁPIS':live?(v.demo?'DEMO':'LIVE'):'OFFLINE'; $('pDot').style.color=live?'':'var(--pink)';
+  document.querySelectorAll('#pModes .p-btn').forEach(b=>{
+    const m=b.dataset.mode, ask=PW.ask&&PW.ask.mode===m;
+    b.classList.toggle('on',live&&v.mode===m&&!ask); b.classList.toggle('ask',!!ask);
+    b.lastElementChild.textContent=ask?'Potvrdit?':m==='home'?'LAN':(v.isp&&v.isp[m])||m;
+  });
+  pw.classList.toggle('locked',!live||!!v.busy);
+  // "signal lost" over the last known picture
+  const down=!live&&v.state!=='init';
+  pw.classList.toggle('down',down);
+  if(down){
+    const t=v.state==='nolan'?'DISCONNECTED':v.state==='nopass'?'CHYBÍ HESLO':v.state==='nomodule'?'PORTTIK NENALEZEN':'SWITCH LINK LOST';
+    $('pLostT').textContent=t; $('pLostT').dataset.t=t;
+    $('pLostWhy').textContent=String(v.error||'TL-SG1024DE NEODPOVÍDÁ').toUpperCase().slice(0,70);
+    $('pLostHint').textContent=v.state==='nolan'?'ČEKÁM NA KABEL…':v.state==='nopass'?'KLIKNI SEM A ZADEJ HESLO TP-LINKU':v.state==='nomodule'?'':'ZKOUŠÍM ZNOVU…';
+  }
+  // new events from the hub (first load: only the latest one)
+  const evs=v.events||[];
+  if(PW.seen<0){ if(evs.length) pSay(evs[evs.length-1].msg, evs[evs.length-1].level==='error'); PW.seen=v.ev||0; }
+  else { for(const e of evs) if(e.id>PW.seen) pSay(e.msg,e.level==='error'); if(evs.length) PW.seen=Math.max(PW.seen,evs[evs.length-1].id); if(typeof v.ev==='number'&&v.ev<PW.seen) PW.seen=v.ev; }
+  pTick();
+}
+let pBusy=false;
+async function ports(){
+  if(BG||pBusy) return; pBusy=true;
+  try{ const v=await get(pApi('')); if(v&&Array.isArray(v.ports)) pRender(v); else if(v===null&&!hubOk&&PW.v) pRender({...PW.v,state:'lost',error:'hub neběží',busy:null,events:[]}); }
+  finally{ pBusy=false; }
+}
+function pCancelAsk(){ clearTimeout(PW.askT); PW.ask=null; if(PW.v) pRender(PW.v); }
+/* my port: first click = PortTik's plan (nothing is written), second click on the same button within 20 s = do it */
+document.querySelectorAll('#pModes .p-btn').forEach(b=>b.addEventListener('click',async(e)=>{
+  e.stopPropagation();
+  const m=b.dataset.mode, v=PW.v;
+  if(!v||v.state!=='live') return pSay('přepínač není dostupný :: nelze přepnout',true);
+  if(v.busy) return pSay('právě probíhá :: '+v.busy,true);
+  if(PW.ask&&PW.ask.mode===m&&Date.now()<PW.ask.until){
+    const tok=PW.ask.token; pCancelAsk();
+    const r=await pPost('/switch?mode='+m+'&token='+tok);
+    if(!r.ok) pSay('CHYBA :: '+(r.error||'nepodařilo se'),true);
+    return ports();
+  }
+  pCancelAsk();
+  const r=await pPost('/preview?mode='+m);
+  if(!r.ok){ pSay('CHYBA :: '+(r.error||'nepodařilo se'),true); return; }
+  if(!r.noop){ PW.ask={mode:m,token:r.token,until:Date.now()+20000}; PW.askT=setTimeout(()=>{ pCancelAsk(); pSay('potvrzení vypršelo :: nic se nezměnilo'); },20000); }
+  ports();
+}));
+$('pOpen').addEventListener('click',async(e)=>{ e.stopPropagation(); pSay('opening PortTik ...'); const r=await pPost('/open'); if(!r.ok) pSay('CHYBA :: '+(r.error||'nelze otevřít'),true); else if(r.opened==='web') pSay('PortTik.exe nenalezen :: otevírám web přepínače'); });
+$('pw').addEventListener('click',()=>{ if(PW.ask) return pCancelAsk(); if(PW.v&&PW.v.state==='nopass') pPost('/ask-password'); });
+if(!BG){ ports(); setInterval(ports,5000); setInterval(()=>{ if(!asleep()) pTick(); },1000); }
+
+/* ---------- music ---------- */
+let M=null, artId=null;
+const mmss=(ms)=>{ms=Math.max(0,ms||0);const s=Math.floor(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+async function media(){
+  if(BG) return;
+  const m=await get('/api/media'); if(!m) return; M=m; M.localAt=performance.now();
+  if(m.playlist){ $('plTi').textContent=m.playlist.title; if($('plImg').src!==m.playlist.cover) $('plImg').src=m.playlist.cover; }
+  const has=m.status&&m.status!=='None'&&m.status!=='Error'&&m.title;
+  $('mTi').textContent=has?m.title:'Nic nehraje';
+  $('mAr').textContent=has?(m.artist||''):'Pusť si playlist →';
+  $('mSrc').textContent=has?((m.album?m.album+' · ':'')+(m.status==='Playing'?'HRAJE':'POZASTAVENO')).toUpperCase():'';
+  const ap=(m.app||'').toLowerCase();
+  $('mApp').textContent=!has?'—':/spotify/.test(ap)?'SPOTIFY':/opera/.test(ap)?'OPERA':/chrome/.test(ap)?'CHROME':/edge/.test(ap)?'EDGE':/firefox/.test(ap)?'FIREFOX':'PROHLÍŽEČ';
+  $('ppIcon').innerHTML=m.status==='Playing'?'<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>':'<path d="M8 5v14l11-7z"/>';
+  if(m.artId!==artId){ artId=m.artId; const cv=$('mCover');
+    if(has&&m.artId){ const img=new Image(); img.crossOrigin='anonymous'; img.onload=()=>{ cv.style.backgroundImage=`url(${img.src})`; cv.classList.add('has'); tint(img); }; img.onerror=()=>{cv.style.backgroundImage='';cv.classList.remove('has')}; img.src=api('/api/media/art')+'&a='+m.artId; }
+    else { cv.style.backgroundImage=''; cv.classList.remove('has'); document.documentElement.style.setProperty('--song','24,17,41'); }
+  }
+}
+function tint(img){ // Rylix idea: the widget takes its colour from the cover
+  try{ const c=document.createElement('canvas'); c.width=c.height=16; const x=c.getContext('2d'); x.drawImage(img,0,0,16,16);
+    const d=x.getImageData(0,0,16,16).data; let r=0,g=0,b=0,n=0;
+    for(let i=0;i<d.length;i+=4){ const mx=Math.max(d[i],d[i+1],d[i+2]),mn=Math.min(d[i],d[i+1],d[i+2]); const w=(mx-mn)+10; r+=d[i]*w; g+=d[i+1]*w; b+=d[i+2]*w; n+=w; }
+    document.documentElement.style.setProperty('--song',`${Math.round(r/n)},${Math.round(g/n)},${Math.round(b/n)}`);
+  }catch(e){}
+}
+function progress(){
+  if(BG||asleep()) return;
+  if(M&&M.durationMs>0){ let pos=M.positionMs+(M.status==='Playing'?(performance.now()-M.localAt):0); pos=Math.min(pos,M.durationMs);
+    $('mPos').textContent=mmss(pos); $('mDur').textContent=mmss(M.durationMs); $('mBar').style.width=(pos/M.durationMs*100)+'%'; }
+  else { $('mPos').textContent='0:00'; $('mDur').textContent='0:00'; $('mBar').style.width='0'; }
+}
+progress(); setInterval(progress,500); media(); setInterval(media,1500);
+const act=(a)=>post('/api/media/'+a).then(()=>setTimeout(media,400));
+$('bPP').onclick=()=>act('toggle'); $('bNext').onclick=()=>act('next'); $('bPrev').onclick=()=>act('prev'); $('bPl').onclick=()=>act('playlist');
+
+// Nullwave shell: pause everything while this screen's desktop is covered by windows
+if(Q.has('down')){ $('camLast').src=api('/cam85.jpg'); setInterval(()=>views.forEach(v=>v.classList.add('down')),300); }   // preview of the outage look
+window.nwPause=(on)=>{ on=!!on; const h=document.documentElement.classList; if(on===h.contains('paused')) return; h.toggle('paused',on);
+  if(on) camStop(); else { stats(); if(!BG){ clock(); show(cur); media(); ports(); } } };
+show(location.hash==="#cam"?1:0);
+</script>
+</body>
+</html>

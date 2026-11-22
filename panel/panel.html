@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Nullwave</title>
+<link rel="icon" href="/brand/nullwave.svg">
+<style>
+@font-face{font-family:"Figtree";src:url(/fonts/figtree-latin.woff2) format("woff2");font-weight:300 900}
+@font-face{font-family:"Figtree";src:url(/fonts/figtree-latin-ext.woff2) format("woff2");font-weight:300 900;unicode-range:U+0100-02AF}
+:root{--ink:#0f0a1e;--ink2:#181129;--ink3:#241838;--paper:#f3eefa;--paper2:#a9a8c2;--paper3:#66658a;--paper4:#33324d;
+  --teal:#22e6d4;--pink:#ff3ea5;--purple:#9b4dff;--hair:rgba(243,238,250,.10);--hair2:rgba(243,238,250,.2);
+  --grad:linear-gradient(135deg,#22e6d4,#9b4dff 55%,#ff3ea5);--mono:Consolas,"Lucida Console",monospace;--disp:Bahnschrift,"Arial Narrow",sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:var(--ink);color:var(--paper);font-family:"Figtree","Segoe UI",sans-serif;overflow:hidden;user-select:none;
+  background-image:radial-gradient(ellipse 500px 300px at 0% 0%,rgba(155,77,255,.28),transparent 70%),radial-gradient(ellipse 500px 260px at 100% 100%,rgba(255,62,165,.18),transparent 70%)}
+.wrap{display:flex;flex-direction:column;height:100%;padding:22px 22px 16px}
+
+/* header */
+.top{display:flex;align-items:center;gap:14px}
+.top img{width:54px;height:54px;filter:drop-shadow(0 8px 18px rgba(155,77,255,.45))}
+.top h1{font-family:var(--disp);font-weight:700;font-size:30px;letter-spacing:-.01em;line-height:1}
+.top h1 span{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.top p{font-family:var(--mono);font-size:10px;letter-spacing:.16em;color:var(--paper3);margin-top:5px}
+.pill{margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.12em;padding:6px 11px;border-radius:14px;border:1px solid var(--hair2);display:flex;align-items:center;gap:7px;white-space:nowrap}
+.pill i{width:7px;height:7px;border-radius:50%;background:var(--teal);box-shadow:0 0 8px var(--teal);animation:bl 1.6s infinite}
+.pill.off i{background:var(--pink);box-shadow:0 0 8px var(--pink);animation:none}
+@keyframes bl{50%{opacity:.35}}
+
+/* hero buttons */
+.hero{display:grid;grid-template-columns:1.6fr 1fr;gap:10px;margin-top:20px}
+.btn{border:none;border-radius:14px;padding:14px 16px;font:inherit;font-weight:700;font-size:15px;cursor:pointer;text-align:left;color:var(--paper);background:var(--ink3);border:1px solid var(--hair2);transition:transform .15s,background .2s}
+.btn:hover{transform:translateY(-1px);border-color:var(--teal)}
+.btn small{display:block;font-family:var(--mono);font-weight:400;font-size:9.5px;letter-spacing:.12em;color:var(--paper3);margin-top:4px}
+.btn.main{background:var(--grad);color:#0f0a1e;border:none}
+.btn.main small{color:rgba(15,10,30,.65)}
+
+/* windows look switch */
+.ui{margin-top:14px;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:var(--ink2);border:1px solid var(--hair)}
+.ui div{flex:1;min-width:0}.ui b{display:block;font-size:15px}.ui span{display:block;font-size:12px;color:var(--paper2);margin-top:2px}
+.sw{width:54px;height:30px;border-radius:15px;border:1px solid var(--hair2);background:var(--ink3);position:relative;cursor:pointer;transition:background .25s}
+.sw i{position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:var(--paper3);transition:left .25s,background .25s}
+.sw.on{background:var(--grad);border:none}.sw.on i{left:29px;background:#fff}
+.sw.busy{opacity:.5;pointer-events:none}
+/* section */
+h2{font-family:var(--mono);font-weight:400;font-size:10px;letter-spacing:.18em;color:var(--paper3);margin:20px 0 9px;display:flex;justify-content:space-between}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--ink2);border:1px solid var(--hair);border-radius:12px;padding:4px;gap:4px}
+.seg button{border:none;background:transparent;color:var(--paper2);font:inherit;font-size:13px;font-weight:600;padding:9px 6px;border-radius:9px;cursor:pointer;line-height:1.15}
+.seg button small{display:block;font-family:var(--mono);font-weight:400;font-size:9px;letter-spacing:.08em;color:var(--paper3);margin-top:3px}
+.seg button.on{background:var(--paper);color:var(--ink)}
+.seg button.on small{color:#6e6c8c}
+
+.list{background:var(--ink2);border:1px solid var(--hair);border-radius:12px;overflow:hidden}
+.row{display:flex;align-items:center;gap:11px;padding:10px 14px;border-top:1px solid var(--hair);font-size:13px}
+.row:first-child{border-top:none}
+.row .d{width:8px;height:8px;border-radius:50%;background:var(--paper4);flex:none}
+.row .d.ok{background:var(--teal);box-shadow:0 0 8px rgba(34,230,212,.6)}
+.row .d.bad{background:var(--pink);box-shadow:0 0 8px rgba(255,62,165,.6)}
+.row .d.wait{background:var(--purple)}
+.row b{font-weight:700;min-width:92px}
+.row span{color:var(--paper2);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.row a{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--teal);cursor:pointer;text-decoration:none;white-space:nowrap}
+.row a:hover{color:var(--paper)}
+
+.foot{margin-top:auto;display:flex;gap:8px;padding-top:14px}
+.ghost{flex:1;border:1px solid var(--hair2);background:transparent;color:var(--paper2);font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;padding:10px;border-radius:10px;cursor:pointer}
+.ghost:hover{color:var(--paper);border-color:var(--paper3)}
+.ghost.x:hover{border-color:var(--pink);color:var(--pink)}
+.dead{position:fixed;inset:0;background:rgba(15,10,30,.92);display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:30px}
+.dead b{font-family:var(--disp);font-size:22px}
+.dead span{color:var(--paper2);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <img src="/brand/nullwave.svg" alt="">
+    <div><h1><span>Null</span>wave</h1><p>ŽIVÁ TAPETA · v1.0</p></div>
+    <div class="pill" id="pill"><i></i><span id="pillT">HUB BĚŽÍ</span></div>
+  </div>
+
+  <div class="hero">
+    <button class="btn main" id="oPrev">Otevřít náhled<small>TAPETA V OKNĚ</small></button>
+    <button class="btn" id="oDir">Složka<small>SOUBORY PROJEKTU</small></button>
+  </div>
+
+  <div class="ui" id="ui">
+    <div><b>Vzhled Windows</b><span id="uiT">…</span></div>
+    <button class="sw" id="uiSw" aria-label="přepnout"><i></i></button>
+  </div>
+
+  <h2><span>REŽIM TAPETY</span><span id="modeHint"></span></h2>
+  <div class="seg" id="seg">
+    <button data-m="full">Plný<small>≈1,9 % CPU</small></button>
+    <button data-m="lite">Lite<small>≈1,5 % CPU</small></button>
+    <button data-m="static">Statický<small>≈0,1 % CPU</small></button>
+  </div>
+
+  <h2><span>ZDROJE</span><span id="upd">--</span></h2>
+  <div class="list" id="feeds"></div>
+
+  <h2><span>NASTAVENÍ</span><span id="setupN"></span></h2>
+  <div class="list" id="setup"></div>
+
+  <div class="foot">
+    <button class="ghost" id="hRe">↻ RESTART HUBU</button>
+    <button class="ghost x" id="hOff">⏻ VYPNOUT NULLWAVE</button>
+  </div>
+</div>
+<div class="dead" id="dead"><b>Nullwave vypnutý</b><span>Tapeta teď nemá živá data.<br>Znovu ho zapneš ikonou Nullwave.</span></div>
+
+<script>
+const K = new URLSearchParams(location.search).get('k') || '';
+const api = (p) => p + (p.includes('?') ? '&' : '?') + 'k=' + K;
+const $ = (id) => document.getElementById(id);
+const post = (p) => fetch(api(p), { method: 'POST' }).then((r) => r.json()).catch(() => null);
+const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const dur = (s) => s < 60 ? s + ' s' : s < 3600 ? Math.floor(s / 60) + ' min' : Math.floor(s / 3600) + ' h ' + Math.floor(s % 3600 / 60) + ' min';
+const row = (st, name, text, link) => `<div class="row"><i class="d ${st}"></i><b>${name}</b><span>${text}</span>${link || ''}</div>`;
+let stopping = false;
+
+async function refresh() {
+  if (stopping) return;
+  let h;
+  try { h = await (await fetch(api('/api/health'), { cache: 'no-store' })).json(); }
+  catch { $('pill').classList.add('off'); $('pillT').textContent = 'HUB NEBĚŽÍ'; return; }
+  $('pill').classList.remove('off'); $('pillT').textContent = 'BĚŽÍ ' + dur(h.hubUptime).toUpperCase();
+  [...$('seg').children].forEach((b) => b.classList.toggle('on', b.dataset.m === h.mode));
+  $('upd').textContent = new Date().toLocaleTimeString('cs-CZ');
+  const P = h.pings || {};
+  const pg = (id) => P[id] ? (P[id].ok ? `online · ${P[id].ms} ms` : 'offline') : '…';
+  const pst = (id) => P[id] ? (P[id].ok ? 'ok' : 'bad') : 'wait';
+  const t = h.trader;
+  const eq = t.equity != null ? '$' + t.equity.toLocaleString('cs-CZ', { maximumFractionDigits: 2 }) : '';
+  $('feeds').innerHTML =
+    row(t.ok ? 'ok' : (t.keyExists ? 'bad' : 'wait'), 'Trader', t.ok ? `${eq} · ${esc(t.status)}` : esc(t.error || 'zatím nic'), !t.keyExists ? '<a data-o="guide">JAK?</a>' : '') +
+    row(h.media.title ? 'ok' : 'wait', 'Spotify', h.media.title ? `${esc(h.media.artist)} · ${esc(h.media.title)}` : (h.playlist ? 'playlist: ' + esc(h.playlist.title) : 'nic nehraje')) +
+    row(pst('cam85'), 'Kamera', pg('cam85') + (h.cam.streaming ? ' · stream běží' : '')) +
+    row(pst('traderhost'), 'Trader host', pg('traderhost')) +
+    row(pst('server'), 'Server', pg('server'));
+  $('uiSw').classList.toggle('on', h.theme.active);
+  $('uiT').textContent = h.theme.active ? 'Nullwave: tmavý režim, fialový panel, kurzor, tapeta, terminál' : 'Původní Windows';
+  const S = h.setup, done = [S.traderKey].filter(Boolean).length;
+  $('setupN').textContent = done + ' / 1';
+  $('setup').innerHTML =
+    row(S.traderKey ? 'ok' : 'bad', 'Klíč tradera', S.traderKey ? 'přístup jen ke čtení dat' : 'trader widget nemá data', S.traderKey ? '' : '<a data-o="guide">JAK?</a>');
+}
+document.addEventListener('click', (e) => { const o = e.target.closest('[data-o]'); if (o) post('/api/open/' + o.dataset.o); });
+$('oPrev').onclick = () => post('/api/open/preview');
+$('oDir').onclick = () => post('/api/open/folder');
+[...$('seg').children].forEach((b) => b.onclick = async () => { await post('/api/mode/' + b.dataset.m); refresh(); });
+$('hRe').onclick = async () => { $('pillT').textContent = 'RESTARTUJI…'; await post('/api/hub/restart'); setTimeout(refresh, 2500); };
+$('uiSw').onclick = async () => {
+  const on = $('uiSw').classList.contains('on'); $('uiSw').classList.add('busy'); $('uiT').textContent = on ? 'Vracím původní vzhled…' : 'Přepínám na Nullwave…';
+  await post('/api/theme/' + (on ? 'restore' : 'apply')); $('uiSw').classList.remove('busy'); refresh();
+};
+$('hOff').onclick = async () => {
+  stopping = true; $('dead').querySelector('span').innerHTML = 'Vracím původní vzhled Windows…';
+  $('dead').style.display = 'flex';
+  await post('/api/theme/restore'); await post('/api/hub/stop');
+  $('dead').querySelector('span').innerHTML = 'Windows má zase původní vzhled.<br>Nullwave znovu zapneš ikonou na ploše.';
+};
+refresh(); setInterval(refresh, 3000);
+</script>
+</body>
+</html>

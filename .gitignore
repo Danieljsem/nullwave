@@ -1,0 +1,12 @@
+node_modules/
+hub/config.json
+hub/cache/
+hub/known_hosts
+wallpaper/config.js
+theme/backup/
+theme/theme-backup.json
+theme/Nullwave.theme
+shell/tray-helper.exe
+*.tmp
+*.log
+*.new

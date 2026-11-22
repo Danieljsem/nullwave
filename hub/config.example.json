@@ -1,0 +1,57 @@
+{
+  "port": 4791,
+  "key": "",
+  "ffmpeg": "C:\\path\\to\\ffmpeg.exe",
+  "trader": {
+    "ssh": "C:\\Windows\\System32\\OpenSSH\\ssh.exe",
+    "key": "C:\\Users\\YOU\\.ssh\\nullwave_trader",
+    "host": "user@trader-host.local",
+    "everyMs": 15000
+  },
+  "cam85": {
+    "label": "Camera",
+    "rtsp": "rtsp://CAMERA_HOST:554/your-stream-path"
+  },
+  "rdp": null,
+  "spotifyPlaylist": "37i9dQZF1DXcBWIGoYBM5M",
+  "devices": [
+    {
+      "id": "traderhost",
+      "label": "TRADER",
+      "host": "trader-host.local",
+      "port": 22
+    },
+    {
+      "id": "cam85",
+      "label": "CAMERA",
+      "host": "CAMERA_HOST",
+      "port": 554
+    },
+    {
+      "id": "server",
+      "label": "SERVER",
+      "host": "server.local",
+      "port": 3389
+    }
+  ],
+  "mode": "full",
+  "shell": {
+    "widgets": "primary",
+    "applyTheme": true,
+    "pins": [
+      {
+        "name": "Průzkumník souborů",
+        "path": "explorer.exe"
+      },
+      {
+        "name": "Nastavení Windows",
+        "path": "ms-settings:"
+      }
+    ]
+  },
+  "ports": {
+    "enabled": false,
+    "porttikDir": "",
+    "vlanColors": {}
+  }
+}

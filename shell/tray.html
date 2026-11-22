@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<title>Nullwave tray</title>
+<style>
+@font-face{font-family:"Figtree";src:url(../wallpaper/fonts/figtree-latin.woff2) format("woff2");font-weight:300 900}
+@font-face{font-family:"Figtree";src:url(../wallpaper/fonts/figtree-latin-ext.woff2) format("woff2");font-weight:300 900;unicode-range:U+0100-02AF}
+:root{--ink:#0f0a1e;--ink2:#181129;--ink3:#241838;--paper:#f3eefa;--paper2:#a9a8c2;--paper3:#66658a;--teal:#22e6d4;--pink:#ff3ea5;--purple:#9b4dff;--hair:rgba(243,238,250,.12)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:transparent;user-select:none;font-family:"Figtree","Segoe UI",sans-serif;color:var(--paper)}
+/* laid out 300 px wide and scaled to the real window, like the rail */
+#box{position:fixed;left:0;top:0;width:300px;height:100vh;transform-origin:0 0;display:flex;flex-direction:column;background:linear-gradient(160deg,rgba(24,17,41,.98),rgba(15,10,30,.98) 60%,rgba(36,16,52,.98));border:1px solid var(--hair);border-radius:14px;overflow:hidden}
+#box::before{content:"";position:absolute;left:0;top:0;right:0;height:2px;background:linear-gradient(90deg,var(--teal),var(--purple) 55%,var(--pink))}
+h1{font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--paper2);padding:14px 16px 8px;flex:none;display:flex;justify-content:space-between;align-items:center}
+h1 span{font-weight:500;color:var(--paper3)}
+#list{flex:1;min-height:0;overflow-y:auto;scrollbar-width:none;padding:0 6px}
+.it{position:relative;display:flex;align-items:center;gap:11px;height:38px;padding:0 10px;border-radius:9px;cursor:pointer;transition:background .12s}
+.it:hover{background:var(--ink3)}
+.it:hover::before{content:"";position:absolute;left:0;top:9px;bottom:9px;width:3px;border-radius:2px;background:var(--teal)}
+.it.busy{opacity:.55;pointer-events:none}
+.it img,.it svg{width:20px;height:20px;flex:none;object-fit:contain}
+.it svg{fill:none;stroke:var(--paper3);stroke-width:1.6}
+.it div{min-width:0;flex:1;line-height:1.2}
+.it b{display:block;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.it small{display:block;font-size:10.5px;color:var(--paper3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msg{padding:14px 12px;font-size:12.5px;color:var(--paper2);line-height:1.4}
+.msg.err{color:var(--pink)}
+footer{flex:none;border-top:1px solid var(--hair);padding:8px 10px 10px;display:flex;flex-direction:column;gap:6px}
+footer p{font-size:10.5px;color:var(--paper3);padding:0 6px;min-height:13px}
+footer p.err{color:var(--pink)}
+footer button{font:inherit;font-size:12px;font-weight:600;color:var(--paper2);background:transparent;border:1px solid var(--hair);border-radius:9px;padding:7px 10px;cursor:pointer;text-align:left}
+footer button:hover{border-color:var(--teal);color:var(--teal)}
+</style>
+</head>
+<body>
+<div id="box">
+  <h1>Oznamovací oblast <span id="count"></span></h1>
+  <div id="list"><div class="msg">Načítám ikony…</div></div>
+  <footer>
+    <p id="hint">Levé tlačítko otevře, pravé ukáže nabídku ikony.</p>
+    <button id="peek" title="Ukáže skutečný hlavní panel Windows, dokud z něj neodjedeš myší">Zobrazit hlavní panel Windows</button>
+  </footer>
+</div>
+<script>
+const $=(i)=>document.getElementById(i);
+function fit(){ const z=innerWidth/300, el=$('box'); if(!(z>0)) return; el.style.transform=Math.abs(z-1)<.02?'':`scale(${z})`; el.style.height=(innerHeight/z)+'px'; }
+addEventListener('resize',fit); fit();
+const GLYPH='<svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="12" cy="12" r="2.4"/></svg>';
+const HINT='Levé tlačítko otevře, pravé ukáže nabídku ikony.';
+const els=new Map();
+function row(i){
+  const el=document.createElement('div'); el.className='it'; el.dataset.k=i.key;
+  el.innerHTML='<span class="ic"></span><div><b></b><small></small></div>';
+  return el;
+}
+function update(d){
+  const box=$('list');
+  $('hint').textContent=d.note||HINT; $('hint').className=d.noteErr?'err':'';
+  if(d.state!=='ok'){ els.clear(); box.innerHTML=`<div class="msg ${d.state==='error'?'err':''}"></div>`; box.firstChild.textContent=d.state==='error'?(d.error||'Ikony se nepodařilo načíst.'):'Načítám ikony…'; $('count').textContent=''; return; }
+  if(!els.size) box.innerHTML='';
+  $('count').textContent=d.icons.length||'';
+  if(!d.icons.length){ els.clear(); box.innerHTML='<div class="msg">Žádné ikony.</div>'; return; }
+  const seen=new Set();
+  d.icons.forEach((i,n)=>{
+    seen.add(i.key);
+    let el=els.get(i.key); if(!el){ el=row(i); els.set(i.key,el); }
+    const ic=el.firstChild, im=ic.firstChild;
+    if(i.icon){ if(!im||im.tagName!=='IMG'){ ic.innerHTML='<img draggable="false">'; } if(ic.firstChild.getAttribute('src')!==i.icon) ic.firstChild.src=i.icon; }
+    else if(!im||im.tagName==='IMG') ic.innerHTML=GLYPH;
+    ic.style.display='contents';
+    const b=el.querySelector('b'), s=el.querySelector('small');
+    if(b.textContent!==i.label) b.textContent=i.label;
+    if(s.textContent!==(i.sub||'')) s.textContent=i.sub||'';
+    s.style.display=i.sub?'':'none';
+    if(el.title!==(i.tip||'')) el.title=i.tip||'';
+    el.classList.toggle('busy',d.busy===i.key);
+    if(box.children[n]!==el) box.insertBefore(el,box.children[n]||null);
+  });
+  for(const [k,el] of els) if(!seen.has(k)){ el.remove(); els.delete(k); }
+}
+tray.onData((d)=>{ try{ update(d); }catch(e){ console.error(e); } });
+const keyOf=(e)=>{ const a=e.target.closest('.it'); return a?a.dataset.k:null; };
+$('list').addEventListener('click',(e)=>{ const k=keyOf(e); if(k) tray.act(k,'left'); });
+addEventListener('contextmenu',(e)=>{ e.preventDefault(); const k=keyOf(e); if(k) tray.act(k,'right'); });
+addEventListener('keydown',(e)=>{ if(e.key==='Escape') tray.close(); });
+$('peek').onclick=()=>tray.peek();
+</script>
+</body>
+</html>
