@@ -6,6 +6,8 @@ An animated live desktop and taskbar replacement for Windows 11, in a teal, purp
 
 ![Nullwave desktop](docs/screenshot.png)
 
+<sub>The rail on the left replaces the Windows taskbar. Sample apps and placeholder hosts are shown.</sub>
+
 Nullwave puts a live wallpaper with widgets behind your desktop icons on every monitor. It replaces the Windows taskbar with a slim rail and switches the Windows look (dark mode, accent colour, cursors) to match. When you quit, everything goes back exactly as it was.
 
 > The UI text is in Czech. Strings sit next to the code in plain HTML/JS, so they are easy to translate.
@@ -25,7 +27,9 @@ Nullwave puts a live wallpaper with widgets behind your desktop icons on every m
   - Start, search, show desktop and clock
   - network type (LAN / Wi-Fi / offline)
   - notification-area icons through a flyout. A small UI Automation helper, compiled on first use from `shell/tray-helper.cs` with the .NET Framework `csc.exe` that ships with Windows.
-- **Launcher:** a radial app launcher with search and number keys for pinned apps.
+- **Launcher:** a radial "start menu" (Alt+Space or the logo on the rail) with search, number keys 1–0 for pinned apps and quick links.
+
+  ![Nullwave launcher](docs/launcher.png)
 - **Windows look switcher** (`theme/theme.ps1`). Dark mode, accent palette, cursors and wallpaper are written to HKCU and to the current theme file. A full backup is taken first and restored on quit.
 - **Optional switch-port widget** for TP-Link Easy Smart switches, through the PortTik app. It is off by default (`ports.enabled`) and needs PortTik, which is not part of this repository.
 - **Lightweight.** Feeds start only while something is looking at them. Everything pauses when the desktop is covered, and there are `lite` and `static` modes.
