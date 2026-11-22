@@ -34,6 +34,15 @@ Nullwave puts a live wallpaper with widgets behind your desktop icons on every m
 - **Optional switch-port widget** for TP-Link Easy Smart switches, through the PortTik app. It is off by default (`ports.enabled`) and needs PortTik, which is not part of this repository.
 - **Lightweight.** Feeds start only while something is looking at them. Everything pauses when the desktop is covered, and there are `lite` and `static` modes.
 
+## Details
+
+![Nullwave details: icon, cursors, palette, glitch outage, rail](docs/details.png)
+
+- **Cursors:** custom arrow, text and link cursors in the teal → purple gradient (`theme/cursors`, `.cur` plus SVG sources), switched on and off together with the Windows look.
+- **App icon:** the null sign with a scan line, in `brand/` as SVG, PNG and ICO.
+- **Palette:** teal `#22E6D4`, purple `#9B4DFF`, pink `#FF3EA5` on ink `#0F0A1E`. The accent colour of Windows (Start, title bars) is set to the same purple.
+- **Typography:** Figtree for the UI, Bahnschrift and Consolas from Windows for numbers and labels.
+
 ## Requirements
 
 - Windows 11 (tested on 25H2), with mixed-DPI multi-monitor support
